@@ -8,22 +8,30 @@ from imutils.video import VideoStream
 from imutils.video import FPS
 import argparse
 
+# construct the argument parse and parse the arguments
+ap = argparse.ArgumentParser()
+ap.add_argument("-p", "--prototxt", required=True,
+        help="path to Caffe 'deploy' prototxt file")
+ap.add_argument("-m", "--model", required=True,
+        help="path to Caffe pre-trained model")
+ap.add_argument("-n", "--mini", required=True,
+        help="path to mini xception model")
+ap.add_argument("-i", "--image", required=True,
+        help="path to image")
+ap.add_argument("-c", "--confidence", type=float, default=0.5,
+        help="minimum probability to filter weak detections")
+args = vars(ap.parse_args())
+
 # parameters for loading data and models
 print("[INFO] loading face detection")
-proto_path = 'SSD/deploy.prototxt.txt'
-model_path = 'SSD/res10_300x300_ssd_iter_140000.caffemodel'
-ap = argparse.ArgumentParser()
-ap.add_argument("-c", "--confidence", type=float, default=0.5)
-args = vars(ap.parse_args())
-detector = cv2.dnn.readNetFromCaffe(proto_path, model_path)
+detector = cv2.dnn.readNetFromCaffe(args["prototxt"], args["model"])
 print("[INFO] loading face emotion")
-emotion_model_path = 'models/_mini_XCEPTION.106-0.65.hdf5'
-emotion_classifier = load_model(emotion_model_path, compile=False)
+emotion_classifier = load_model(args["mini"], compile=False)
 EMOTIONS = ["angry" ,"disgust","scared", "happy", "sad", "surprised",
  "neutral"]
 #loading image
 print("[INFO] loading image")
-frame = cv2.imread('FaceEmotion_ID/test/danhnguyen.jpg', 1)
+frame = cv2.imread(args["image"], 1)
 #process image
 frame = imutils.resize(frame, width=800)
 (h, w) = frame.shape[:2]
