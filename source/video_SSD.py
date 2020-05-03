@@ -35,6 +35,7 @@ print("[INFO] loading video ... ")
 video = cv2.VideoCapture(args["video"])
 #process image
 while True:
+    start_time = time.time()
     ret, frame = video.read()
     frame = imutils.resize(frame, width=800)
     (h, w) = frame.shape[:2]
@@ -72,6 +73,7 @@ while True:
             cv2.putText(frame, label, (startX, y),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
             # ensure the face width and height are sufficiently large
+    print("[INFO] FPS: ", 1.0 / (time.time() - start_time))
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
     if key == ord("q"):
