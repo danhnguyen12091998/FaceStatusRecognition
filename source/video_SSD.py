@@ -5,28 +5,34 @@ import cv2
 from keras.models import load_model
 import numpy as np
 from imutils.video import VideoStream
+from imutils.video import FPS
 import argparse
 import time
 import os
 
-print ('[INFO] using opencv version %s]' % cv2.__version__)
 # parameters for loading data and models
-print("[INFO] loading face detection")
-proto_path = 'SSD/deploy.prototxt.txt'
-model_path = 'SSD/res10_300x300_ssd_iter_140000.caffemodel'
+# construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-c", "--confidence", type=float, default=0.5)
+ap.add_argument("-p", "--prototxt", required=True,
+        help="path to Caffe 'deploy' prototxt file")
+ap.add_argument("-m", "--model", required=True,
+        help="path to Caffe pre-trained model")
+ap.add_argument("-n", "--mini", required=True,
+        help="path to mini xception model")
+ap.add_argument("-v", "--video", required=True,
+        help="path to video")
+ap.add_argument("-c", "--confidence", type=float, default=0.5,
+        help="minimum probability to filter weak detections")
 args = vars(ap.parse_args())
-detector = cv2.dnn.readNetFromCaffe(proto_path, model_path)
+print("[INFO] loading face detection")
+detector = cv2.dnn.readNetFromCaffe(args["prototxt"], args["model"])
 print("[INFO] loading face emotion")
-emotion_model_path = 'models/models_mini_XCEPTION.40-0.80.hdf5'
-emotion_classifier = load_model(emotion_model_path, compile=False)
-# EMOTIONS = ["angry" ,"disgust","scared", "happy", "sad", "surprised",
-#  "neutral"]
-EMOTIONS = ["sad", "happy", "neutral"]
+emotion_classifier = load_model(args["mini"], compile=False)
+EMOTIONS = ["angry" ,"disgust","scared", "happy", "sad", "surprised",
+ "neutral"]
 #loading video 
 print("[INFO] loading video ... ")
-video = cv2.VideoCapture('FaceEmotion_ID/video/demo_1.avi')
+video = cv2.VideoCapture(args["video"])
 one_sec = 0.0
 number_of_frames = 0
 #process image
@@ -68,7 +74,6 @@ while True:
             label = EMOTIONS[preds.argmax()]
             cv2.putText(frame, label, (startX, y),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
-            #print("[INFO] FPS: ", 1.0 / (time.time() - start_time))
             number_of_frames = number_of_frames + 1
             time_of_frame = time.time() - start_time_of_frame 
             one_sec = one_sec + time_of_frame
@@ -87,5 +92,6 @@ while True:
     key = cv2.waitKey(1) & 0xFF
     if key == ord("q"):
         break
+fps.stop()
 cv2.destroyAllWindows()
 vs.stop()
